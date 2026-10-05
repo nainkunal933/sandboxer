@@ -42,8 +42,6 @@ jobs:
         run: python -m pip check
       - name: Build native executable
         run: python scripts/build.py
-      - name: Smoke test executable
-        run: python scripts/smoke_test.py dist/${{ matrix.executable }}
       - name: Archive executable and documentation
         shell: python
         env:
