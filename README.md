@@ -96,3 +96,33 @@ On Windows, use `.\dist\sandboxer.exe` instead. Version output should be
 `sandboxer 0.1.0`; running without arguments displays the welcome screen and
 waits for Enter. The standalone executable does not require Python to be
 installed. Copy it to a directory on your `PATH` to run it as `sandboxer`.
+
+## Automated native builds
+
+The **Build executables** GitHub Actions workflow runs on pull requests,
+pushes to `main`, and manual dispatch. It builds and smoke-tests each executable
+on a native runner, then uploads an archive containing the executable, this
+README, and the license:
+
+| Artifact | Target |
+| --- | --- |
+| `sandboxer-linux-x86_64` | Linux x86_64, glibc 2.35 or newer (Ubuntu 22.04 baseline) |
+| `sandboxer-windows-x86_64` | Windows x86_64 |
+| `sandboxer-macos-arm64` | macOS 15 or newer, Apple Silicon |
+| `sandboxer-macos-x86_64` | macOS 15 or newer, Intel |
+
+Download an artifact from a successful workflow run and extract both the
+GitHub artifact wrapper and the archive inside it. Windows uses ZIP; Linux
+and macOS use tar.gz to retain executable permissions. These are portable
+executables, not OS installer packages. Artifacts expire after 30 days; the
+workflow does not publish a GitHub Release.
+
+Run the same smoke checks locally with the virtual environment's Python:
+
+```sh
+.venv/bin/python scripts/smoke_test.py dist/sandboxer
+```
+
+On Windows use `.venv\Scripts\python.exe scripts\smoke_test.py dist\sandboxer.exe`.
+The smoke test runs from a temporary directory outside the checkout and verifies
+help, version, welcome/Enter input, and invalid-option exit status.
