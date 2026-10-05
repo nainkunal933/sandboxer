@@ -1,0 +1,70 @@
+name: Build executables
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: linux-x86_64
+            executable: sandboxer
+          - os: windows-2022
+            target: windows-x86_64
+            executable: sandboxer.exe
+          - os: macos-15
+            target: macos-arm64
+            executable: sandboxer
+          - os: macos-15-intel
+            target: macos-x86_64
+            executable: sandboxer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install pinned build dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Check dependencies
+        run: python -m pip check
+      - name: Build native executable
+        run: python scripts/build.py
+      - name: Smoke test executable
+        run: python scripts/smoke_test.py dist/${{ matrix.executable }}
+      - name: Archive executable and documentation
+        shell: python
+        env:
+          TARGET: ${{ matrix.target }}
+          EXECUTABLE: ${{ matrix.executable }}
+        run: |
+          import os
+          from pathlib import Path
+          import shutil
+          import tempfile
+
+          Path('artifacts').mkdir()
+          with tempfile.TemporaryDirectory() as staging:
+              for source in (Path('dist') / os.environ['EXECUTABLE'], Path('README.md'), Path('LICENSE')):
+                  shutil.copy2(source, staging)
+              archive_format = 'zip' if os.name == 'nt' else 'gztar'
+              shutil.make_archive('artifacts/sandboxer-' + os.environ['TARGET'], archive_format, staging)
+      - name: Upload native archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: sandboxer-${{ matrix.target }}
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 30
