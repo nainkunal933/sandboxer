@@ -104,6 +104,8 @@ to preserve this sequence.
 
 The same version is embedded in the executable's `--version` output and in
 archive names such as `sandboxer-0.1.0-alpha.42-windows-x86_64.zip`.
+Packaged executables enable Python UTF-8 mode so the Unicode welcome screen
+also works when Windows output is redirected or captured.
 To reproduce a versioned build locally:
 
 ```sh

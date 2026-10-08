@@ -33,6 +33,7 @@ def main() -> int:
         result = subprocess.run([
             sys.executable, "-m", "PyInstaller",
             "--noconfirm", "--clean", "--onefile", "--console",
+            "--python-option", "X utf8",
             "--name", "sandboxer",
             "--distpath", str(output_dir),
             "--workpath", str(Path(build_dir) / "work"),
