@@ -59,6 +59,75 @@ separate release credentials.
 ```
 
 On Windows, use `.\dist\sandboxer.exe` instead. Version output should be
-`sandboxer 0.1.0`; running without arguments displays the welcome screen and
+`sandboxer 0.1.0-alpha.0` for a local build; running without arguments displays the welcome screen and
 waits for Enter. The standalone executable does not require Python to be
 installed. Copy it to a directory on your `PATH` to run it as `sandboxer`.
+
+## Automated native builds
+
+The **Build executables** GitHub Actions workflow runs on pull requests,
+pushes to `main`, and manual dispatch. It builds and smoke-tests each executable
+on a native runner, then uploads an archive containing the executable, this
+README, and the license:
+
+| Artifact | Target |
+| --- | --- |
+| `sandboxer-linux-x86_64` | Linux x86_64, glibc 2.35 or newer (Ubuntu 22.04 baseline) |
+| `sandboxer-windows-x86_64` | Windows x86_64 |
+| `sandboxer-macos-arm64` | macOS 15 or newer, Apple Silicon |
+| `sandboxer-macos-x86_64` | macOS 15 or newer, Intel |
+
+Download an artifact from a successful workflow run and extract both the
+GitHub artifact wrapper and the archive inside it. Windows uses ZIP; Linux
+and macOS use tar.gz to retain executable permissions. These are portable
+executables, not OS installer packages. Workflow artifacts expire after 30 days.
+
+### Automatic prereleases on main
+
+Every push to `main` (including each merge) builds all four targets. After all
+builds and smoke tests succeed, the workflow publishes a **GitHub Release**
+marked as a prerelease, with all four archives and a `SHA256SUMS` file. Failed
+builds do not publish a partial release. Pull requests and manual workflow runs
+only create workflow artifacts and never publish releases.
+
+GitHub Packages supports registries such as containers and npm, rather than
+standalone executable downloads. These executable archives are hosted in
+GitHub Releases and are retained until the release is deleted.
+
+The source version is defined in `src/_version.py` as `0.1.0-alpha.0`.
+Automatic builds replace the final prerelease number with the GitHub workflow
+run number: for example, `0.1.0-alpha.42`, tagged as `v0.1.0-alpha.42`.
+Run numbers increase and may have gaps because PR and manual runs also consume
+numbers. A rerun keeps the same version and resumes an unpublished draft;
+published releases are never overwritten. Keep the workflow identity unchanged
+to preserve this sequence.
+
+The same version is embedded in the executable's `--version` output and in
+archive names such as `sandboxer-0.1.0-alpha.42-windows-x86_64.zip`.
+Packaged executables enable Python UTF-8 mode so the Unicode welcome screen
+also works when Windows output is redirected or captured.
+To reproduce a versioned build locally:
+
+```sh
+.venv/bin/python scripts/build.py --version 0.1.0-alpha.42
+.venv/bin/python scripts/smoke_test.py dist/sandboxer --version 0.1.0-alpha.42
+```
+
+The release job uses GitHub Actions' `GITHUB_TOKEN` with `contents: write`;
+no personal token is needed. Repository rules must permit this token to create
+tags and releases. Binaries remain unsigned.
+
+Version `1.0.0` is reserved for a future intentional stable release. Automatic
+versioning rejects a stable source version; update the stable-release policy
+when you decide to ship `1.0.0`. This workflow never promotes a prerelease to
+stable automatically.
+
+Run the same smoke checks locally with the virtual environment's Python:
+
+```sh
+.venv/bin/python scripts/smoke_test.py dist/sandboxer
+```
+
+On Windows use `.venv\Scripts\python.exe scripts\smoke_test.py dist\sandboxer.exe`.
+The smoke test runs from a temporary directory outside the checkout and verifies
+help, version, welcome/Enter input, and invalid-option exit status.

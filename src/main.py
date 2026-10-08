@@ -1,4 +1,5 @@
 import argparse
+from _version import VERSION
 
 from rich.align import Align
 from rich.console import Console, Group
@@ -58,7 +59,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.1.0",
+        version=f"%(prog)s {VERSION}",
     )
     return parser
 
