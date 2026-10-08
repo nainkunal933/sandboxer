@@ -38,51 +38,26 @@ have not yet been implemented.
 
 ## Run from source
 
-Use Python 3.12 and install the pinned dependencies in a virtual environment:
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) 0.12.23 or newer separately
+from the project's virtual environment. Then, from the project root, run:
 
 ```sh
-python -m venv .venv
-```
-
-On Linux and macOS:
-
-```sh
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python src/main.py
-```
-
-On Windows (PowerShell):
-
-```powershell
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe src\main.py
+uv sync --locked
+uv run --locked src/main.py
 ```
 
 ## Build a standalone executable
 
-Run the build helper using the virtual environment's Python:
+Run the build helper with the build dependency group:
 
 ```sh
-# Linux and macOS
-.venv/bin/python scripts/build.py
-```
-
-```powershell
-# Windows
-.venv\Scripts\python.exe scripts\build.py
+uv run --locked --group build scripts/build.py
 ```
 
 The output is `dist/sandboxer` on Linux/macOS or `dist/sandboxer.exe`
 on Windows. Use `--output-dir PATH` to choose a different destination.
 The helper can be run from any working directory; a relative output path is
 resolved from that directory. Temporary build files are removed when it exits.
-
-PyInstaller builds for the current operating system and architecture. Build
-Windows, Linux, and macOS executables on native machines for each target;
-this helper does not cross-compile. Linux executables require a compatible
-glibc version (build on the oldest Linux version you intend to support).
-The executables are unsigned; code signing and macOS notarization require
-separate release credentials.
 
 ## Verify and run the executable
 
@@ -100,7 +75,8 @@ installed. Copy it to a directory on your `PATH` to run it as `sandboxer`.
 ## Automated native builds
 
 The **Build executables** GitHub Actions workflow runs on pull requests,
-pushes to `main`, and manual dispatch. It builds and smoke-tests each executable
+pushes to `main`, and manual dispatch. It installs the locked build dependencies
+with uv and builds each executable
 on a native runner, then uploads an archive containing the executable, this
 README, and the license:
 
@@ -116,13 +92,3 @@ GitHub artifact wrapper and the archive inside it. Windows uses ZIP; Linux
 and macOS use tar.gz to retain executable permissions. These are portable
 executables, not OS installer packages. Artifacts expire after 30 days; the
 workflow does not publish a GitHub Release.
-
-Run the same smoke checks locally with the virtual environment's Python:
-
-```sh
-.venv/bin/python scripts/smoke_test.py dist/sandboxer
-```
-
-On Windows use `.venv\Scripts\python.exe scripts\smoke_test.py dist\sandboxer.exe`.
-The smoke test runs from a temporary directory outside the checkout and verifies
-help, version, welcome/Enter input, and invalid-option exit status.
