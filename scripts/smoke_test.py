@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import runpy
+import os
 
 
 def main() -> None:
@@ -39,4 +40,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except RuntimeError as error:
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            message = str(error).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+            print(f"::error::{message}")
+        raise
