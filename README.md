@@ -74,10 +74,10 @@ installed. Copy it to a directory on your `PATH` to run it as `sandboxer`.
 
 ## Automated native builds
 
-The **Build executables** GitHub Actions workflow runs on pull requests,
-pushes to `main`, and manual dispatch. It installs the locked build dependencies
-with uv and builds each executable
-on a native runner, then uploads an archive containing the executable, this
+The **Build executables** GitHub Actions workflow runs on pushes to `main` or
+tags matching `v*`. It installs the locked
+build dependencies with uv and builds each executable on a native runner, then
+uploads an archive containing the executable, this
 README, and the license:
 
 | Artifact | Target |
@@ -90,5 +90,19 @@ README, and the license:
 Download an artifact from a successful workflow run and extract both the
 GitHub artifact wrapper and the archive inside it. Windows uses ZIP; Linux
 and macOS use tar.gz to retain executable permissions. These are portable
-executables, not OS installer packages. Artifacts expire after 30 days; the
-workflow does not publish a GitHub Release.
+executables, not OS installer packages. Workflow artifacts expire after 30 days.
+
+To publish the archives as GitHub Release assets, push a version tag after the
+workflow changes have been merged, for example:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Once all four builds succeed, the workflow creates a release for that tag with
+generated release notes and the ZIP/tar.gz archives attached. Download a release
+archive from the repository's **Releases** page and extract it directly. Release
+assets are separate from the expiring workflow artifacts. Publishing uses the
+built-in `GITHUB_TOKEN`; no additional secret is required. Each release tag should
+be unique; rerunning publication for a tag with an existing release will fail.
