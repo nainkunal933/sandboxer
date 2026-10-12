@@ -1,6 +1,8 @@
 import argparse
 import os
 from pathlib import Path
+import sys
+import tomllib
 
 from dotenv import load_dotenv
 from rich.align import Align
@@ -80,7 +82,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.1.0",
+        version=f"%(prog)s {project_version()}",
     )
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser(
@@ -89,6 +91,17 @@ def create_parser() -> argparse.ArgumentParser:
         description="Select a model provider to configure.",
     )
     return parser
+
+
+def project_version() -> str:
+    """Read the project version from source or bundled build metadata."""
+    metadata_dir = (
+        Path(__file__).resolve().parent
+        if getattr(sys, "frozen", False)
+        else Path(__file__).resolve().parent.parent
+    )
+    with (metadata_dir / "pyproject.toml").open("rb") as metadata:
+        return tomllib.load(metadata)["project"]["version"]
 
 
 def main() -> None:
