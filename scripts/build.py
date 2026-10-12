@@ -14,7 +14,8 @@ def main() -> int:
         help="Executable output directory (default: dist in the current directory)",
     )
     args = parser.parse_args()
-    entrypoint = Path(__file__).resolve().parents[1] / "src" / "main.py"
+    project_root = Path(__file__).resolve().parents[1]
+    entrypoint = project_root / "src" / "main.py"
     output_dir = args.output_dir.resolve()
     with tempfile.TemporaryDirectory(prefix="sandboxer-build-") as build_dir:
         result = subprocess.run([
@@ -24,6 +25,7 @@ def main() -> int:
             "--distpath", str(output_dir),
             "--workpath", str(Path(build_dir) / "work"),
             "--specpath", build_dir,
+            "--add-data", f"{project_root / 'pyproject.toml'}:.",
             str(entrypoint),
         ])
     return result.returncode

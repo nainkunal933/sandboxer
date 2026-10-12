@@ -67,18 +67,17 @@ resolved from that directory. Temporary build files are removed when it exits.
 ./dist/sandboxer
 ```
 
-On Windows, use `.\dist\sandboxer.exe` instead. Version output should be
-`sandboxer 0.1.0`; running without arguments displays the welcome screen and
+On Windows, use `.\dist\sandboxer.exe` instead. Version output is
+`sandboxer <version>`; running without arguments displays the welcome screen and
 waits for Enter. The standalone executable does not require Python to be
 installed. Copy it to a directory on your `PATH` to run it as `sandboxer`.
 
 ## Automated native builds
 
-The **Build executables** GitHub Actions workflow runs on pushes to `main` or
-tags matching `v*`. It installs the locked
-build dependencies with uv and builds each executable on a native runner, then
-uploads an archive containing the executable, this
-README, and the license:
+The **Test builds** workflow checks all four native builds on PR updates. The
+**Build executables** workflow runs on pushes to `main` and publishes releases
+after all builds succeed. Both workflows upload an archive containing the
+executable, this README, and the license:
 
 | Artifact | Target |
 | --- | --- |
@@ -92,17 +91,16 @@ GitHub artifact wrapper and the archive inside it. Windows uses ZIP; Linux
 and macOS use tar.gz to retain executable permissions. These are portable
 executables, not OS installer packages. Workflow artifacts expire after 30 days.
 
-To publish the archives as GitHub Release assets, push a version tag after the
-workflow changes have been merged, for example:
+## Releases
 
-```sh
-git tag v0.1.0
-git push origin v0.1.0
-```
+Before merging a PR, apply a release label:
 
-Once all four builds succeed, the workflow creates a release for that tag with
-generated release notes and the ZIP/tar.gz archives attached. Download a release
-archive from the repository's **Releases** page and extract it directly. Release
-assets are separate from the expiring workflow artifacts. Publishing uses the
-built-in `GITHUB_TOKEN`; no additional secret is required. Each release tag should
-be unique; rerunning publication for a tag with an existing release will fail.
+| Label | Version bump |
+| --- | --- |
+| `release:patch` | Bug fixes |
+| `release:minor` | New features |
+| `release:major` | Breaking changes |
+
+Unlabeled PRs default to patch. When multiple unreleased PRs are included, the
+largest bump wins. After all builds succeed on `main`, CI creates the Git tag and
+release automatically. Download binaries from **GitHub Releases**.
