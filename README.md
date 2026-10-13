@@ -46,6 +46,21 @@ uv sync --locked
 uv run --locked src/main.py
 ```
 
+## MCP server
+
+Start the local STDIO server with:
+
+```sh
+uv run --locked src/main.py mcp
+```
+
+The server exposes two tools, both accepting `objective` and optional `values`:
+
+- `analyze`: validates and normalizes sandbox context.
+- `generate`: returns a data generation prompt for the host model to execute.
+
+The standalone executable supports `sandboxer mcp` with the same tools.
+
 ## Build a standalone executable
 
 Run the build helper with the build dependency group:

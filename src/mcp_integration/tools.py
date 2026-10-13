@@ -1,38 +1,21 @@
-"""Definitions for tools exposed by the Sandboxer MCP server."""
+"""Tools exposed by the Sandboxer MCP server."""
 
-from dataclasses import dataclass
-from typing import Mapping
-
-
-@dataclass(frozen=True, slots=True)
-class ToolDefinition:
-    """Provider-neutral metadata for an MCP tool."""
-
-    name: str
-    description: str
-    input_schema: Mapping[str, object]
+from core import build_context, build_generation_prompt
 
 
-def default_tools() -> tuple[ToolDefinition, ...]:
-    """Return the initial Sandboxer MCP tool catalog."""
-    empty_object_schema: Mapping[str, object] = {
-        "type": "object",
-        "properties": {},
-    }
-    return (
-        ToolDefinition(
-            name="collect_context",
-            description="Collect context required to prepare a sandbox.",
-            input_schema=empty_object_schema,
-        ),
-        ToolDefinition(
-            name="generate_sandbox_data",
-            description="Generate data needed by a sandbox.",
-            input_schema=empty_object_schema,
-        ),
-        ToolDefinition(
-            name="inspect_workspace",
-            description="Inspect workspace metadata relevant to a sandbox.",
-            input_schema=empty_object_schema,
-        ),
-    )
+def analyze(
+    objective: str,
+    values: dict[str, str] | None = None,
+) -> dict[str, object]:
+    """Validate and normalize a sandbox objective and additional context."""
+    context = build_context(objective, values)
+    return {"objective": context.objective, "values": dict(context.values)}
+
+
+def generate(
+    objective: str,
+    values: dict[str, str] | None = None,
+) -> dict[str, str]:
+    """Prepare a sandbox data generation prompt for the host model to execute."""
+    context = build_context(objective, values)
+    return {"prompt": build_generation_prompt(context)}

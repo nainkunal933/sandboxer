@@ -90,6 +90,11 @@ def create_parser() -> argparse.ArgumentParser:
         help="Configure a model provider.",
         description="Select a model provider to configure.",
     )
+    subparsers.add_parser(
+        "mcp",
+        help="Start the Sandboxer MCP server over STDIO.",
+        description="Expose the analyze and generate tools to an MCP host.",
+    )
     return parser
 
 
@@ -109,6 +114,12 @@ def main() -> None:
     load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=False)
     parser = create_parser()
     args = parser.parse_args()
+    if args.command == "mcp":
+        from mcp_integration import SandboxerMCPServer
+
+        SandboxerMCPServer().run()
+        return
+
     if args.command == "configure":
         missing_keys = [
             name for name in API_KEY_VARIABLES if not os.getenv(name, "").strip()
