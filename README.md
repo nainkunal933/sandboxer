@@ -56,9 +56,10 @@ uv run --locked src/main.py mcp
 
 The server exposes two tools, both accepting `objective` and optional `values`:
 
-- `analyze`: validates sandbox context and an existing project directory. Pass
-  `project_root` as an absolute path; if omitted, the tool asks for it through MCP
-  elicitation, which requires host support. Declining stops analysis.
+- `analyze`: validates sandbox context and an existing project directory. Always
+  asks the user to explicitly supply an absolute `project_root` through MCP
+  elicitation, which requires host support. The host cannot supply the path as a
+  tool argument. Declining or canceling stops analysis.
 - `generate`: returns a data generation prompt for the host model to execute.
 
 The standalone executable supports `sandboxer mcp` with the same tools.
