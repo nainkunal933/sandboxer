@@ -56,7 +56,9 @@ uv run --locked src/main.py mcp
 
 The server exposes two tools, both accepting `objective` and optional `values`:
 
-- `analyze`: validates and normalizes sandbox context.
+- `analyze`: validates sandbox context and an existing project directory. Pass
+  `project_root` as an absolute path; if omitted, the tool asks for it through MCP
+  elicitation, which requires host support. Declining stops analysis.
 - `generate`: returns a data generation prompt for the host model to execute.
 
 The standalone executable supports `sandboxer mcp` with the same tools.
@@ -87,35 +89,6 @@ On Windows, use `.\dist\sandboxer.exe` instead. Version output is
 waits for Enter. The standalone executable does not require Python to be
 installed. Copy it to a directory on your `PATH` to run it as `sandboxer`.
 
-## Automated native builds
+## Contributing
 
-The **Test builds** workflow checks all four native builds on PR updates. The
-**Build executables** workflow runs on pushes to `main` and publishes releases
-after all builds succeed. Both workflows upload an archive containing the
-executable, this README, and the license:
-
-| Artifact | Target |
-| --- | --- |
-| `sandboxer-linux-x86_64` | Linux x86_64, glibc 2.35 or newer (Ubuntu 22.04 baseline) |
-| `sandboxer-windows-x86_64` | Windows x86_64 |
-| `sandboxer-macos-arm64` | macOS 15 or newer, Apple Silicon |
-| `sandboxer-macos-x86_64` | macOS 15 or newer, Intel |
-
-Download an artifact from a successful workflow run and extract both the
-GitHub artifact wrapper and the archive inside it. Windows uses ZIP; Linux
-and macOS use tar.gz to retain executable permissions. These are portable
-executables, not OS installer packages. Workflow artifacts expire after 30 days.
-
-## Releases
-
-Before merging a PR, apply a release label:
-
-| Label | Version bump |
-| --- | --- |
-| `release:patch` | Bug fixes |
-| `release:minor` | New features |
-| `release:major` | Breaking changes |
-
-Unlabeled PRs default to patch. When multiple unreleased PRs are included, the
-largest bump wins. After all builds succeed on `main`, CI creates the Git tag and
-release automatically. Download binaries from **GitHub Releases**.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for automated native builds and the release process.
