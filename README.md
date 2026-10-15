@@ -56,12 +56,10 @@ uv run --locked src/main.py mcp
 
 The server exposes two tools, both accepting `objective` and optional `values`:
 
-- `analyze`: validates sandbox context and an existing project directory. Always
-  asks the user through MCP elicitation to use the current folder or choose another
-  folder, which requires host support. Choosing another folder prompts for a
-  relative or absolute path; relative paths start from Sandboxer's working
-  directory. The host cannot supply the path as a tool argument. Declining or
-  canceling either prompt stops analysis.
+- `analyze`: validates context, prompts for a project folder through MCP elicitation,
+  and recursively inventories files in a temporary CSV (`filename,eligible,path`).
+  All files start ineligible; contents are not scanned. Returns `inventory_csv_path`
+  and `file_count` alongside the context.
 - `generate`: returns a data generation prompt for the host model to execute.
 
 The standalone executable supports `sandboxer mcp` with the same tools.

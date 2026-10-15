@@ -5,6 +5,15 @@ from typing import Mapping
 
 
 @dataclass(frozen=True, slots=True)
+class FileInventoryEntry:
+    """A project file listed for possible future content scanning."""
+
+    filename: str
+    path: str
+    eligible: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class SandboxContext:
     """Validated user context used to generate sandbox data."""
 
