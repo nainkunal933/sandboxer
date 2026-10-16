@@ -15,9 +15,10 @@ def analyze(
     resolved_root: Annotated[ProjectRootInput, Resolve(resolve_project_root)],
     values: dict[str, str] | None = None,
 ) -> dict[str, object]:
-    """Choose a project root and inventory all files in a temporary CSV.
+    """Choose a project root and inventory nonignored files in a temporary CSV.
 
     Return inventory_csv_path and file_count alongside validated context.
+    The bundled .schemaignore excludes matching files and prunes directories.
     Eligibility marks schema candidates by extension; file contents are not scanned.
     """
     context = build_context(objective, values)
