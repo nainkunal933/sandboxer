@@ -58,8 +58,8 @@ The server exposes two tools, both accepting `objective` and optional `values`:
 
 - `analyze`: validates context, prompts for a project folder through MCP elicitation,
   and recursively inventories files in a temporary CSV (`filename,eligible,path`).
-  All files start ineligible; contents are not scanned. Returns `inventory_csv_path`
-  and `file_count` alongside the context.
+  Marks schema candidates eligible by extension; contents are not scanned. Returns
+  `inventory_csv_path` and `file_count` alongside the context.
 - `generate`: returns a data generation prompt for the host model to execute.
 
 The standalone executable supports `sandboxer mcp` with the same tools.

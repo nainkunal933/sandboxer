@@ -18,7 +18,7 @@ def analyze(
     """Choose a project root and inventory all files in a temporary CSV.
 
     Return inventory_csv_path and file_count alongside validated context.
-    Every file is ineligible; file contents are not scanned.
+    Eligibility marks schema candidates by extension; file contents are not scanned.
     """
     context = build_context(objective, values)
     inventory_csv_path, file_count = create_file_inventory(Path(resolved_root.project_root))
