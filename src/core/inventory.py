@@ -1,10 +1,12 @@
-"""List project files without reading their contents."""
+"""List project files using schema ignore rules without reading file contents."""
 
 import csv
 import os
 import tempfile
 from collections.abc import Iterator
 from pathlib import Path
+
+from pathspec import GitIgnoreSpec
 
 from .schemas import FileInventoryEntry
 
@@ -27,7 +29,10 @@ def _is_schema_candidate(path: Path) -> bool:
 
 
 def _iter_files(root: Path, output_directory: Path) -> Iterator[FileInventoryEntry]:
-    """Walk directories in a stable order without following directory links."""
+    """Prune ignored paths and walk in stable order without directory links."""
+    with Path(__file__).with_name(".schemaignore").open(encoding="utf-8") as stream:
+        ignore_spec = GitIgnoreSpec.from_lines(stream)
+
     directories = [root]
     while directories:
         directory = directories.pop()
@@ -38,21 +43,28 @@ def _iter_files(root: Path, output_directory: Path) -> Iterator[FileInventoryEnt
             path = Path(entry.path)
             if path == output_directory:
                 continue
-            if entry.is_dir(follow_symlinks=False):
+            relative_path = path.relative_to(root).as_posix()
+            is_directory = entry.is_dir(follow_symlinks=False)
+            match_path = relative_path + "/" if is_directory else relative_path
+            if ignore_spec.match_file(match_path):
+                continue
+            if is_directory:
                 if not path.is_junction():
                     children.append(path)
             elif entry.is_file():
                 yield FileInventoryEntry(
                     filename=entry.name,
-                    path=path.relative_to(root).as_posix(),
+                    path=relative_path,
                     eligible=_is_schema_candidate(path),
                 )
         directories.extend(reversed(children))
 
 
 def create_file_inventory(project_root: Path) -> tuple[Path, int]:
-    """Write a persistent temporary CSV and return its path and file count.
+    """Write a temporary CSV of nonignored files and return its path and count.
 
+    The bundled .schemaignore is matched relative to the project root. Ignored
+    directories are not traversed, and ignored files are omitted from the CSV.
     Eligibility marks potential schema sources by extension only; file contents
     are not read. A failed inventory is removed rather than returned as a complete
     result. Completed inventories are left for the caller.

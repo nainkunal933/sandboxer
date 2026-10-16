@@ -26,6 +26,7 @@ def main() -> int:
             "--workpath", str(Path(build_dir) / "work"),
             "--specpath", build_dir,
             "--add-data", f"{project_root / 'pyproject.toml'}:.",
+            "--add-data", f"{project_root / 'src' / 'core' / '.schemaignore'}:core",
             str(entrypoint),
         ])
     return result.returncode
