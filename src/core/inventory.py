@@ -9,6 +9,23 @@ from pathlib import Path
 from .schemas import FileInventoryEntry
 
 
+_SCHEMA_CANDIDATE_EXTENSIONS = frozenset({
+    # Schema and definition formats.
+    ".sql", ".ddl", ".cql", ".prisma", ".dbml", ".avsc", ".avdl",
+    ".proto", ".graphql", ".gql", ".xsd",
+    # Structured documents.
+    ".json", ".jsonc", ".json5", ".yaml", ".yml", ".xml",
+    # Common ORM and model sources.
+    ".py", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts",
+    ".java", ".kt", ".cs", ".go", ".rb", ".php", ".scala",
+})
+
+
+def _is_schema_candidate(path: Path) -> bool:
+    """Identify potential schema sources by extension without reading contents."""
+    return path.suffix.lower() in _SCHEMA_CANDIDATE_EXTENSIONS
+
+
 def _iter_files(root: Path, output_directory: Path) -> Iterator[FileInventoryEntry]:
     """Walk directories in a stable order without following directory links."""
     directories = [root]
@@ -28,6 +45,7 @@ def _iter_files(root: Path, output_directory: Path) -> Iterator[FileInventoryEnt
                 yield FileInventoryEntry(
                     filename=entry.name,
                     path=path.relative_to(root).as_posix(),
+                    eligible=_is_schema_candidate(path),
                 )
         directories.extend(reversed(children))
 
@@ -35,8 +53,9 @@ def _iter_files(root: Path, output_directory: Path) -> Iterator[FileInventoryEnt
 def create_file_inventory(project_root: Path) -> tuple[Path, int]:
     """Write a persistent temporary CSV and return its path and file count.
 
-    Every file starts ineligible. A failed inventory is removed rather than
-    returned as a complete result. Completed inventories are left for the caller.
+    Eligibility marks potential schema sources by extension only; file contents
+    are not read. A failed inventory is removed rather than returned as a complete
+    result. Completed inventories are left for the caller.
     """
     root = project_root.resolve(strict=True)
     if not root.is_dir():
