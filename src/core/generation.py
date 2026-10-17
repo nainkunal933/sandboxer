@@ -1,4 +1,6 @@
-"""Sandbox data generation logic shared by the CLI and MCP server."""
+"""Provider-neutral prompts shared by the CLI and MCP server."""
+
+from importlib.resources import files
 
 from .schemas import SandboxContext
 
@@ -17,4 +19,20 @@ def build_generation_prompt(context: SandboxContext) -> str:
         f"{context.objective}\n\n"
         "Additional context:\n"
         f"{details}"
+    )
+
+
+def build_schema_analysis_prompt(
+    project_root: str,
+    inventory_csv_path: str,
+) -> str:
+    """Render schema analysis instructions for the host agent to execute."""
+    template = (
+        files("core")
+        .joinpath("prompts", "schema_analysis.md")
+        .read_text(encoding="utf-8")
+    )
+    return template.format(
+        project_root=project_root,
+        inventory_csv_path=inventory_csv_path,
     )
