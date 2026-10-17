@@ -27,6 +27,7 @@ def main() -> int:
             "--specpath", build_dir,
             "--add-data", f"{project_root / 'pyproject.toml'}:.",
             "--add-data", f"{project_root / 'src' / 'core' / '.schemaignore'}:core",
+            "--add-data", f"{project_root / 'src' / 'core' / 'prompts'}:core/prompts",
             str(entrypoint),
         ])
     return result.returncode

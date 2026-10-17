@@ -66,7 +66,8 @@ from `pyproject.toml`. Keep path handling and packaging portable across platform
 - Preserve stable traversal order, avoidance of directory symlinks and junctions,
   and exclusion of the current inventory's output directory.
 - `analyze` validates context, resolves the project root through elicitation, and
-  returns the inventory path, count, and context. `generate` returns a prompt for
+  returns the inventory path, count, context, and schema analysis prompt for the
+  host agent to execute. `generate` returns a sandbox data generation prompt for
   the host model to execute. Changes to tool arguments, return fields, CSV format,
   or content-scanning behavior must be intentional and documented.
 - Keep MCP stdout reserved for protocol traffic; send diagnostic logging to stderr.
