@@ -4,6 +4,9 @@
 # Source: https://github.com/github/gitignore (CC0-1.0)
 # Applied by inventory.py to paths relative to the analyzed project root.
 
+# Sandboxer analysis artifacts.
+.sandboxer/
+
 # ===== Node.gitignore =====
 # Source: https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore
 

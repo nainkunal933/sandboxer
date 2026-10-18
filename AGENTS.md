@@ -65,11 +65,13 @@ from `pyproject.toml`. Keep path handling and packaging portable across platform
   stored procedures can qualify. Unsupported and extensionless files remain false.
 - Preserve stable traversal order, avoidance of directory symlinks and junctions,
   and exclusion of the current inventory's output directory.
-- `analyze` validates context, resolves the project root through elicitation, and
-  returns the inventory path, count, context, and schema analysis prompt for the
-  host agent to execute. `generate` returns a sandbox data generation prompt for
-  the host model to execute. Changes to tool arguments, return fields, CSV format,
-  or content-scanning behavior must be intentional and documented.
+- `analyze` validates context, resolves the project root through elicitation,
+  creates `.sandboxer/`, and returns the inventory path, count, context, and schema
+  analysis prompt for the host agent to write `.sandboxer/schema.md`. The bundled
+  `.schemaignore` excludes `.sandboxer/` artifacts from the inventory.
+  `generate` returns a sandbox data generation prompt for the host model to execute.
+  Changes to tool arguments, return fields, CSV format, or content-scanning
+  behavior must be intentional and documented.
 - Keep MCP stdout reserved for protocol traffic; send diagnostic logging to stderr.
   MCP host authentication is separate from direct provider API authentication.
 

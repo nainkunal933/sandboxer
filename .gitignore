@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Sandboxer artifacts generated in example projects.
+/examples/**/.sandboxer/

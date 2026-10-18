@@ -20,16 +20,18 @@ def analyze(
     resolved_root: Annotated[ProjectRootInput, Resolve(resolve_project_root)],
     values: dict[str, str] | None = None,
 ) -> dict[str, object]:
-    """Choose a project root and inventory nonignored files in a temporary CSV.
+    """Choose a project root, create .sandboxer, and inventory nonignored files.
 
     Return inventory_csv_path, file_count, validated context, and a prompt.
     The host agent should execute the returned prompt to inspect candidate files
-    and create schema.md in the project root.
+    and create .sandboxer/schema.md relative to the project root.
     The bundled .schemaignore excludes matching files and prunes directories.
     Eligibility marks schema candidates by extension; file contents are not scanned.
     """
     context = build_context(objective, values)
-    inventory_csv_path, file_count = create_file_inventory(Path(resolved_root.project_root))
+    project_root = Path(resolved_root.project_root)
+    (project_root / ".sandboxer").mkdir(exist_ok=True)
+    inventory_csv_path, file_count = create_file_inventory(project_root)
     return {
         "project_root": resolved_root.project_root,
         "objective": context.objective,
