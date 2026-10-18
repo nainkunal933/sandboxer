@@ -7,8 +7,8 @@ Read the inventory CSV; paths are relative to the project root. Inspect
 eligible=true candidates, including the bodies of all CRUD procedures and methods.
 Eligibility and filenames alone do not establish a file's purpose or behavior.
 
-Write schema.md in the project root with one project-specific H1 and exactly
-these H2 headings, in order. Use H3 or deeper for subsections.
+Write .sandboxer/schema.md relative to the project root with one project-specific
+H1 and exactly these H2 headings, in order. Use H3 or deeper for subsections.
 
 ```markdown
 # <Project> database schema
@@ -20,8 +20,9 @@ these H2 headings, in order. Use H3 or deeper for subsections.
 ## Population
 ```
 
-If schema.md exists, preserve its title and source-verified information, nesting
-existing schema descriptions under Structure. Source files remain authoritative.
+If .sandboxer/schema.md exists, preserve its title and source-verified information,
+nesting existing schema descriptions under Structure. Source files remain
+authoritative.
 
 Scope and engine: identify engines, databases/namespaces, analyzed sources, setup,
 and migration order where determinable. State that no live database was inspected.
@@ -53,4 +54,5 @@ handling. If an interface is absent, say so. Do not invent procedures or methods
 Keep the document concise: use compact tables, state shared behavior once, and
 record per-operation differences. Do not copy source bodies or repeat schema
 tables. Report missing definitions, unsupported assumptions, and unresolved issues.
-Write only schema.md. Do not execute database commands or include diagrams.
+Write only .sandboxer/schema.md. Do not execute database commands or include
+diagrams.
