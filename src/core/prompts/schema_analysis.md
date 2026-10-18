@@ -1,29 +1,56 @@
-Analyze the database schema defined in this project.
+Analyze this project's database schema and data access code.
 
 Project root: {project_root}
 File inventory: {inventory_csv_path}
 
-Read the inventory CSV. Paths are relative to the project root.
-Inspect files marked eligible=true to identify database definitions.
-Eligibility indicates a candidate file, not a confirmed schema source.
+Read the inventory CSV; paths are relative to the project root. Inspect
+eligible=true candidates, including the bodies of all CRUD procedures and methods.
+Eligibility and filenames alone do not establish a file's purpose or behavior.
 
-Create schema.md in the project root, documenting:
+Write schema.md in the project root with one project-specific H1 and exactly
+these H2 headings, in order. Use H3 or deeper for subsections.
 
-1. Database engines identified from the source files.
-2. Tables and collections, including their purpose where evident.
-3. Fields, native types, nullability or optionality, defaults,
-   and validation constraints.
-4. Primary keys, unique constraints, and indexes.
-5. Relationships and cardinality where supported by the definitions.
-6. For MongoDB, nested documents, arrays, embedded entities,
-   and document references.
+```markdown
+# <Project> database schema
 
-Include source file paths for each documented entity.
-Distinguish explicitly declared constraints from inferred relationships.
-Do not treat MongoDB references as enforced foreign keys.
-Do not invent missing definitions. Record ambiguities and conflicts.
-If migrations exist, account for their ordering where determinable.
+## Scope and engine
 
-If no database definitions are found, document that finding.
-Write only schema.md; leave source files unchanged.
-Do not include a diagram or generate sandbox data at this stage.
+## Structure
+
+## Population
+```
+
+If schema.md exists, preserve its title and source-verified information, nesting
+existing schema descriptions under Structure. Source files remain authoritative.
+
+Scope and engine: identify engines, databases/namespaces, analyzed sources, setup,
+and migration order where determinable. State that no live database was inspected.
+
+Structure: organize by table or collection and document:
+
+- Purpose, source paths, and fields with native types, nullability/optionality,
+  defaults, generated values, keys, indexes, and validation constraints.
+- Relationships, participating fields, and cardinality; distinguish declared
+  constraints from inferred relationships and note ambiguities or conflicts.
+- MongoDB nesting, arrays, embedding, and references without implying foreign-key
+  enforcement.
+
+Population: organize by table or collection. Analyze each create/insert, read,
+update, and delete procedure or method individually. Include:
+
+- Qualified name, operation, source path, and affected entities/fields.
+- A parameter table: exact names, native types, required arguments, NULL/omission
+  handling, defaults, and field mappings. Required does not mean non-null;
+  parameter defaults are not column defaults.
+- Returned values/result sets, side effects, validation, and errors.
+
+Document source-defined transaction behavior and whether setup scripts install
+the procedures.
+
+For MongoDB, document equivalent application operations and embedding/reference
+handling. If an interface is absent, say so. Do not invent procedures or methods.
+
+Keep the document concise: use compact tables, state shared behavior once, and
+record per-operation differences. Do not copy source bodies or repeat schema
+tables. Report missing definitions, unsupported assumptions, and unresolved issues.
+Write only schema.md. Do not execute database commands or include diagrams.
