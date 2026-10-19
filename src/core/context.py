@@ -23,3 +23,11 @@ def build_context(
         objective=normalized_objective,
         values=normalized_values,
     )
+
+
+def normalize_target_options(target_options: list[str]) -> list[str]:
+    """Trim and deduplicate target names while preserving their original order."""
+    options = list(dict.fromkeys(option.strip() for option in target_options))
+    if not options or any(not option for option in options):
+        raise ValueError("Provide at least one target option, with no blank names.")
+    return options
