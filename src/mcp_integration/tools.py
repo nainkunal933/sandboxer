@@ -7,12 +7,16 @@ from mcp.server.mcpserver import Resolve
 
 from core import (
     build_context,
-    build_generation_prompt,
     build_schema_analysis_prompt,
     create_file_inventory,
 )
 
-from .elicitation import ProjectRootInput, resolve_project_root
+from .elicitation import (
+    GenerationTargetInput,
+    ProjectRootInput,
+    request_generation_target,
+    resolve_project_root,
+)
 
 
 def analyze(
@@ -47,8 +51,28 @@ def analyze(
 
 def generate(
     objective: str,
+    project_root: str,
+    target_options: list[str],
+    selection: Annotated[GenerationTargetInput, Resolve(request_generation_target)],
     values: dict[str, str] | None = None,
-) -> dict[str, str]:
-    """Prepare a sandbox data generation prompt for the host model to execute."""
+) -> dict[str, object]:
+    """Ask the user to select a table or collection from host-prepared options.
+
+    Before calling, use the project_root returned by analyze and read only Scope
+    and engine and Structure in its .sandboxer/schema.md. Supply actual table or
+    collection names as target_options, preserving qualified names and excluding
+    descriptive headings. If the document is missing, request analyze instead of
+    inventing options. Do not read Population to prepare this list.
+
+    Return project_root, target, objective, and values. The tool validates the
+    supplied root without folder elicitation and does not read project files,
+    generate data, return a prompt, or write files.
+    """
     context = build_context(objective, values)
-    return {"prompt": build_generation_prompt(context)}
+    resolved_root = ProjectRootInput(project_root=project_root)
+    return {
+        "project_root": resolved_root.project_root,
+        "target": selection.target,
+        "objective": context.objective,
+        "values": dict(context.values),
+    }

@@ -69,7 +69,13 @@ from `pyproject.toml`. Keep path handling and packaging portable across platform
   creates `.sandboxer/`, and returns the inventory path, count, context, and schema
   analysis prompt for the host agent to write `.sandboxer/schema.md`. The bundled
   `.schemaignore` excludes `.sandboxer/` artifacts from the inventory.
-  `generate` returns a sandbox data generation prompt for the host model to execute.
+  Before calling `generate`, the host agent reads only Scope and engine and
+  Structure in `.sandboxer/schema.md`, then supplies the project root from
+  `analyze` and actual table/collection names as `target_options`. `generate`
+  validates the root without folder elicitation, trims and deduplicates the
+  non-empty options, and elicits one of them. It returns `project_root`, `target`,
+  `objective`, and `values`; it does not read project files, generate data, or write
+  files. No arbitrary option-count limit is imposed.
   Changes to tool arguments, return fields, CSV format, or content-scanning
   behavior must be intentional and documented.
 - Keep MCP stdout reserved for protocol traffic; send diagnostic logging to stderr.
