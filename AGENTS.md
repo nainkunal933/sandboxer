@@ -91,10 +91,16 @@ from `pyproject.toml`. Keep path handling and packaging portable across platform
   validated before copying; identical existing copies are reused, while missing
   sources, paths outside the root, and filename/content conflicts fail without
   overwriting existing files. Previously staged files are not deleted.
-  Duplicate source paths are copied once. The tool returns `project_root`,
-  `target`, `objective`, `values`, and `copied_files`
-  (destination paths, including reused copies). It does not parse schema.md,
-  scan for related files, return a prompt, or generate data.
+  Duplicate source paths are copied once. Only after copying succeeds, the tool
+  asks for a record count with ordered choices 10, 50, 100, and Custom. Custom
+  asks for a positive whole number with no application-imposed upper limit.
+  Context values do not skip count elicitation. Decline/cancel aborts completion
+  without a default count; staged files remain. Preparation is a resolver
+  dependency of count elicitation and reuses identical files on MCP retries.
+  The tool returns `project_root`, `target`, `objective`, `values`, `copied_files`
+  (destination paths, including reused copies), and integer `record_count`.
+  The count is elicited, not a caller-supplied tool argument. The tool does not
+  parse schema.md, scan for related files, return a prompt, or generate data.
   No arbitrary option-count limit is imposed.
   Changes to tool arguments, return fields, CSV format, or content-scanning
   behavior must be intentional and documented.
@@ -105,9 +111,8 @@ from `pyproject.toml`. Keep path handling and packaging portable across platform
 
 - We are building the MVP. Keep changes focused on the requested functionality
   and avoid speculative features or unnecessary abstractions.
-- Adding tests for every edit is not required during the MVP phase. Add tests
-  when explicitly requested or when they provide meaningful coverage for complex
-  or high-impact behavior; use focused smoke checks for routine changes.
+- Do not add automated tests at this stage unless explicitly requested. Use
+  focused smoke checks for validation.
 - Follow the existing typed Python style: four-space indentation, snake_case
   functions, descriptive docstrings, and `pathlib.Path` for filesystem paths.
 - Reuse the existing frozen, slotted dataclasses for immutable domain models and

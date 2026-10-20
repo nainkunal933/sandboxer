@@ -4,19 +4,19 @@ from pathlib import Path
 from typing import Annotated
 
 from mcp.server.mcpserver import Resolve
-from mcp.server.mcpserver.exceptions import ToolError
 
 from core import (
     build_context,
     build_schema_analysis_prompt,
     create_file_inventory,
-    copy_procedure_files,
 )
 
 from .elicitation import (
-    GenerationTargetInput,
+    PreparedGeneration,
     ProjectRootInput,
-    request_generation_target,
+    RecordCountInput,
+    prepare_generation,
+    resolve_record_count,
     resolve_project_root,
 )
 
@@ -58,10 +58,11 @@ def generate(
     project_root: str,
     target_options: list[str],
     target_procedures: dict[str, list[str]],
-    selection: Annotated[GenerationTargetInput, Resolve(request_generation_target)],
+    prepared: Annotated[PreparedGeneration, Resolve(prepare_generation)],
+    count: Annotated[RecordCountInput, Resolve(resolve_record_count)],
     values: dict[str, str] | None = None,
 ) -> dict[str, object]:
-    """Ask the user to select a table or collection from host-prepared options.
+    """Select a target, stage creation procedures, and ask for a record count.
 
     Before calling, use the project_root returned by analyze. Read Scope and
     engine and Structure in .sandboxer/schema.md to prepare target_options from
@@ -78,23 +79,19 @@ def generate(
     files into .sandboxer/generate, preserving filenames and contents. Existing
     staged files are not deleted. Identical copies are reused; missing sources
     and filename/content conflicts fail without replacing existing files.
-    Return project_root, target, objective, values, and copied_files
-    (destination paths, including reused copies). No prompt or data is generated.
+    Once copying succeeds, always ask how many records to create: 10, 50, 100,
+    or Custom. Custom requests a positive whole number with no upper limit.
+    Context values do not bypass this question. Decline/cancel aborts completion
+    without a default count; already copied files remain.
+    Return project_root, target, objective, values, copied_files (destination
+    paths, including reused copies), and integer record_count. No prompt or data
+    is generated.
     """
-    context = build_context(objective, values)
-    resolved_root = ProjectRootInput(project_root=project_root)
-    if selection.target not in target_procedures:
-        raise ToolError(f"No procedure file mapping supplied for target: {selection.target}")
-    try:
-        copied_files = copy_procedure_files(
-            Path(resolved_root.project_root), target_procedures[selection.target]
-        )
-    except (OSError, ValueError) as error:
-        raise ToolError(str(error)) from error
     return {
-        "project_root": resolved_root.project_root,
-        "target": selection.target,
-        "objective": context.objective,
-        "values": dict(context.values),
-        "copied_files": [str(path) for path in copied_files],
+        "project_root": prepared.project_root,
+        "target": prepared.target,
+        "objective": prepared.context.objective,
+        "values": dict(prepared.context.values),
+        "copied_files": list(prepared.copied_files),
+        "record_count": count.record_count,
     }
