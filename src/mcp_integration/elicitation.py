@@ -8,7 +8,12 @@ from mcp.server.mcpserver import Elicit, Resolve
 from mcp.server.mcpserver.exceptions import ToolError
 from pydantic import BaseModel, ConfigDict, Field, create_model, field_validator
 
-from core import normalize_target_options
+from core import (
+    SandboxContext,
+    build_context,
+    copy_procedure_files,
+    normalize_target_options,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,3 +150,90 @@ def request_generation_target(
         f"{resolved_root.project_root}",
         choice_model,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedGeneration:
+    """Validated context and staged procedures for the selected target."""
+
+    project_root: str
+    target: str
+    context: SandboxContext
+    copied_files: tuple[str, ...]
+
+
+def prepare_generation(
+    objective: str,
+    project_root: str,
+    target_procedures: dict[str, list[str]],
+    selection: Annotated[GenerationTargetInput, Resolve(request_generation_target)],
+    values: dict[str, str] | None = None,
+) -> PreparedGeneration:
+    """Stage the selected target's procedures before asking for a record count.
+
+    Resolvers can run again when MCP requests resume. The copier reuses identical
+    files, so preparing the same generation again preserves staged files.
+    """
+    try:
+        context = build_context(objective, values)
+        resolved_root = ProjectRootInput(project_root=project_root)
+        if selection.target not in target_procedures:
+            raise ValueError(
+                f"No procedure file mapping supplied for target: {selection.target}"
+            )
+        copied_files = copy_procedure_files(
+            Path(resolved_root.project_root), target_procedures[selection.target]
+        )
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
+    return PreparedGeneration(
+        project_root=resolved_root.project_root,
+        target=selection.target,
+        context=context,
+        copied_files=tuple(str(path) for path in copied_files),
+    )
+
+
+class RecordCountChoice(BaseModel):
+    """A preset record count or a request to enter a custom count."""
+
+    model_config = ConfigDict(json_schema_extra=_remove_elicitation_metadata)
+
+    choice: Literal["10", "50", "100", "Custom"] = Field(
+        description="Choose how many records to create, or enter a custom count.",
+    )
+
+
+class RecordCountInput(BaseModel):
+    """The positive whole-number count requested by the user."""
+
+    model_config = ConfigDict(json_schema_extra=_remove_elicitation_metadata)
+
+    record_count: int = Field(
+        ge=1,
+        strict=True,
+        description="Number of records to create; enter a positive whole number.",
+    )
+
+
+def request_record_count_choice(
+    prepared: Annotated[PreparedGeneration, Resolve(prepare_generation)],
+) -> Elicit[RecordCountChoice]:
+    """Offer record-count choices only after procedure staging succeeds."""
+    return Elicit(
+        f"How many records would you like to create for {prepared.target}? "
+        "Choose 10, 50, 100, or Custom to enter another positive whole number.",
+        RecordCountChoice,
+    )
+
+
+def resolve_record_count(
+    choice: Annotated[RecordCountChoice, Resolve(request_record_count_choice)],
+) -> RecordCountInput | Elicit[RecordCountInput]:
+    """Resolve a preset immediately, or ask for a custom positive integer."""
+    if choice.choice == "Custom":
+        return Elicit(
+            "How many records would you like to create? Enter a positive whole number.",
+            RecordCountInput,
+        )
+    return RecordCountInput(record_count=int(choice.choice))
