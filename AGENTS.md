@@ -69,13 +69,22 @@ from `pyproject.toml`. Keep path handling and packaging portable across platform
   creates `.sandboxer/`, and returns the inventory path, count, context, and schema
   analysis prompt for the host agent to write `.sandboxer/schema.md`. The bundled
   `.schemaignore` excludes `.sandboxer/` artifacts from the inventory.
-  Before calling `generate`, the host agent reads only Scope and engine and
-  Structure in `.sandboxer/schema.md`, then supplies the project root from
-  `analyze` and actual table/collection names as `target_options`. `generate`
-  validates the root without folder elicitation, trims and deduplicates the
-  non-empty options, and elicits one of them. It returns `project_root`, `target`,
-  `objective`, and `values`; it does not read project files, generate data, or write
-  files. No arbitrary option-count limit is imposed.
+  Before calling `generate`, the host agent reads Scope and engine and Structure
+  in `.sandboxer/schema.md` to prepare actual table/collection `target_options`.
+  It reads Population to identify procedure source paths and supplies the root
+  from `analyze` plus `target_procedures`, a mapping from exact target names to
+  root-relative CRUD procedure file paths (empty lists for targets without
+  procedures). `generate` validates the root without folder elicitation, trims
+  and deduplicates the non-empty options, and elicits one of them. After selection,
+  Python copies only that target's mapped files unchanged into
+  `.sandboxer/generate/`, preserving filenames. Sources and destinations are
+  validated before copying; identical existing copies are reused, while missing
+  sources, paths outside the root, and filename/content conflicts fail without
+  overwriting existing files. Duplicate source paths are copied once. The tool
+  returns `project_root`, `target`, `objective`, `values`, and `copied_files`
+  (destination paths, including reused copies). It does not parse schema.md,
+  scan for related files, return a prompt, or generate data.
+  No arbitrary option-count limit is imposed.
   Changes to tool arguments, return fields, CSV format, or content-scanning
   behavior must be intentional and documented.
 - Keep MCP stdout reserved for protocol traffic; send diagnostic logging to stderr.

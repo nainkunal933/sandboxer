@@ -4,11 +4,13 @@ from pathlib import Path
 from typing import Annotated
 
 from mcp.server.mcpserver import Resolve
+from mcp.server.mcpserver.exceptions import ToolError
 
 from core import (
     build_context,
     build_schema_analysis_prompt,
     create_file_inventory,
+    copy_procedure_files,
 )
 
 from .elicitation import (
@@ -53,26 +55,41 @@ def generate(
     objective: str,
     project_root: str,
     target_options: list[str],
+    target_procedures: dict[str, list[str]],
     selection: Annotated[GenerationTargetInput, Resolve(request_generation_target)],
     values: dict[str, str] | None = None,
 ) -> dict[str, object]:
     """Ask the user to select a table or collection from host-prepared options.
 
-    Before calling, use the project_root returned by analyze and read only Scope
-    and engine and Structure in its .sandboxer/schema.md. Supply actual table or
-    collection names as target_options, preserving qualified names and excluding
-    descriptive headings. If the document is missing, request analyze instead of
-    inventing options. Do not read Population to prepare this list.
+    Before calling, use the project_root returned by analyze. Read Scope and
+    engine and Structure in .sandboxer/schema.md to prepare target_options from
+    actual table or collection names, preserving qualified names and excluding
+    descriptive headings. Read Population to identify each target's existing
+    CRUD procedure source files. Supply target_procedures as a mapping from those
+    exact target names to root-relative source paths; use an empty list when no
+    procedures exist. Do not include schema definitions or application methods.
+    If schema.md is missing, request analyze instead of inventing options or paths.
 
-    Return project_root, target, objective, and values. The tool validates the
-    supplied root without folder elicitation and does not read project files,
-    generate data, return a prompt, or write files.
+    After selection, Python copies only the selected target's mapped files into
+    .sandboxer/generate, preserving filenames and contents. Identical copies are
+    reused; missing sources and filename/content conflicts fail without replacing
+    existing files. Return project_root, target, objective, values, and copied_files
+    (destination paths, including reused copies). No prompt or data is generated.
     """
     context = build_context(objective, values)
     resolved_root = ProjectRootInput(project_root=project_root)
+    if selection.target not in target_procedures:
+        raise ToolError(f"No procedure file mapping supplied for target: {selection.target}")
+    try:
+        copied_files = copy_procedure_files(
+            Path(resolved_root.project_root), target_procedures[selection.target]
+        )
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
     return {
         "project_root": resolved_root.project_root,
         "target": selection.target,
         "objective": context.objective,
         "values": dict(context.values),
+        "copied_files": [str(path) for path in copied_files],
     }
