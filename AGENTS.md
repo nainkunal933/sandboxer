@@ -69,19 +69,30 @@ from `pyproject.toml`. Keep path handling and packaging portable across platform
   creates `.sandboxer/`, and returns the inventory path, count, context, and schema
   analysis prompt for the host agent to write `.sandboxer/schema.md`. The bundled
   `.schemaignore` excludes `.sandboxer/` artifacts from the inventory.
+  The document has four H2 sections: Scope and engine, Structure, Population, and
+  Procedure references. Population details only create/insert procedures or
+  equivalent application methods. Other operations are listed in a compact
+  reference table with target, qualified name, operation, and source path; omit
+  their parameter tables and detailed behavior. Re-analysis replaces old
+  read/update/delete details with references, including shared behavior specific
+  to those operations. Inspect creation bodies fully and other operations only
+  enough to verify their classification and references, never by filename alone.
   Before calling `generate`, the host agent reads Scope and engine and Structure
   in `.sandboxer/schema.md` to prepare actual table/collection `target_options`.
   It reads Population to identify procedure source paths and supplies the root
   from `analyze` plus `target_procedures`, a mapping from exact target names to
-  root-relative CRUD procedure file paths (empty lists for targets without
-  procedures). `generate` validates the root without folder elicitation, trims
-  and deduplicates the non-empty options, and elicits one of them. After selection,
+  root-relative create/insert procedure file paths (empty lists for targets without
+  creation procedures). Exclude read/update/delete procedures even when older
+  documents detail them in Population; Procedure references are guidance only.
+  `generate` validates the root without folder elicitation, trims and deduplicates
+  the non-empty options, and elicits one of them. After selection,
   Python copies only that target's mapped files unchanged into
   `.sandboxer/generate/`, preserving filenames. Sources and destinations are
   validated before copying; identical existing copies are reused, while missing
   sources, paths outside the root, and filename/content conflicts fail without
-  overwriting existing files. Duplicate source paths are copied once. The tool
-  returns `project_root`, `target`, `objective`, `values`, and `copied_files`
+  overwriting existing files. Previously staged files are not deleted.
+  Duplicate source paths are copied once. The tool returns `project_root`,
+  `target`, `objective`, `values`, and `copied_files`
   (destination paths, including reused copies). It does not parse schema.md,
   scan for related files, return a prompt, or generate data.
   No arbitrary option-count limit is imposed.

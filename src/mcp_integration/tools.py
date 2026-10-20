@@ -30,7 +30,9 @@ def analyze(
 
     Return inventory_csv_path, file_count, validated context, and a prompt.
     The host agent should execute the returned prompt to inspect candidate files
-    and create .sandboxer/schema.md relative to the project root.
+    and create .sandboxer/schema.md relative to the project root, detailing
+    create/insert interfaces in Population and listing other procedures briefly
+    under Procedure references.
     The bundled .schemaignore excludes matching files and prunes directories.
     Eligibility marks schema candidates by extension; file contents are not scanned.
     """
@@ -65,15 +67,18 @@ def generate(
     engine and Structure in .sandboxer/schema.md to prepare target_options from
     actual table or collection names, preserving qualified names and excluding
     descriptive headings. Read Population to identify each target's existing
-    CRUD procedure source files. Supply target_procedures as a mapping from those
-    exact target names to root-relative source paths; use an empty list when no
-    procedures exist. Do not include schema definitions or application methods.
+    create/insert procedure source files. Supply target_procedures as a mapping
+    from those exact target names to root-relative source paths; use an empty list
+    when no creation procedures exist. Exclude read/update/delete procedures,
+    including any detailed in older schema.md files. Procedure references are
+    guidance only. Do not include schema definitions or application methods.
     If schema.md is missing, request analyze instead of inventing options or paths.
 
-    After selection, Python copies only the selected target's mapped files into
-    .sandboxer/generate, preserving filenames and contents. Identical copies are
-    reused; missing sources and filename/content conflicts fail without replacing
-    existing files. Return project_root, target, objective, values, and copied_files
+    After selection, Python copies only the selected target's mapped creation
+    files into .sandboxer/generate, preserving filenames and contents. Existing
+    staged files are not deleted. Identical copies are reused; missing sources
+    and filename/content conflicts fail without replacing existing files.
+    Return project_root, target, objective, values, and copied_files
     (destination paths, including reused copies). No prompt or data is generated.
     """
     context = build_context(objective, values)
