@@ -4,8 +4,11 @@ Project root: {project_root}
 File inventory: {inventory_csv_path}
 
 Read the inventory CSV; paths are relative to the project root. Inspect
-eligible=true candidates, including the bodies of all CRUD procedures and methods.
-Eligibility and filenames alone do not establish a file's purpose or behavior.
+eligible=true candidates to identify schema definitions and data creation entry
+points. Inspect create/insert procedure and method bodies fully. Inspect other
+procedures and methods only enough to verify their qualified names, operations,
+affected targets, and source paths for reference. Eligibility and filenames alone
+do not establish a file's purpose or behavior.
 
 Write .sandboxer/schema.md relative to the project root with one project-specific
 H1 and exactly these H2 headings, in order. Use H3 or deeper for subsections.
@@ -18,11 +21,15 @@ H1 and exactly these H2 headings, in order. Use H3 or deeper for subsections.
 ## Structure
 
 ## Population
+
+## Procedure references
 ```
 
-If .sandboxer/schema.md exists, preserve its title and source-verified information,
-nesting existing schema descriptions under Structure. Source files remain
-authoritative.
+If .sandboxer/schema.md exists, preserve its title and source-verified schema and
+creation information, nesting schema descriptions under Structure. Replace old
+read/update/delete details with compact entries under Procedure references;
+remove their parameter tables and detailed behavior, including shared behavior
+that only concerns those operations. Source files remain authoritative.
 
 Scope and engine: identify engines, databases/namespaces, analyzed sources, setup,
 and migration order where determinable. State that no live database was inspected.
@@ -36,8 +43,8 @@ Structure: organize by table or collection and document:
 - MongoDB nesting, arrays, embedding, and references without implying foreign-key
   enforcement.
 
-Population: organize by table or collection. Analyze each create/insert, read,
-update, and delete procedure or method individually. Include:
+Population: organize by table or collection. Document only create/insert
+procedures or methods individually. Include:
 
 - Qualified name, operation, source path, and affected entities/fields.
 - A parameter table: exact names, native types, required arguments, NULL/omission
@@ -45,11 +52,18 @@ update, and delete procedure or method individually. Include:
   parameter defaults are not column defaults.
 - Returned values/result sets, side effects, validation, and errors.
 
-Document source-defined transaction behavior and whether setup scripts install
-the procedures.
+Document source-defined creation transaction behavior and whether setup scripts
+install the procedures. Keep shared behavior focused on creation.
 
-For MongoDB, document equivalent application operations and embedding/reference
-handling. If an interface is absent, say so. Do not invent procedures or methods.
+For MongoDB, document equivalent application creation operations and
+embedding/reference handling. If a creation interface is absent, say so. Do not
+invent procedures or methods.
+
+Procedure references: list other procedures or methods, including read, update,
+and delete, in a compact table with target, qualified name, operation, and source
+path. These are references for the agent to consult if needed; do not include
+parameter tables, detailed behavior, or source bodies. Keep them out of Population
+and out of the procedure files supplied to generate for copying.
 
 Keep the document concise: use compact tables, state shared behavior once, and
 record per-operation differences. Do not copy source bodies or repeat schema
