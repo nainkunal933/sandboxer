@@ -16,7 +16,7 @@ _SQL_NOISE = re.compile(r"--[^\r\n]*|/\*.*?\*/|'(?:''|[^'])*'", re.DOTALL)
 _IDENTIFIER = r"(?:\[(?:[^\]]|\]\])+\]|[A-Za-z_]\w*)"
 _PROCEDURE = re.compile(
     rf"\b(?:CREATE(?:\s+OR\s+ALTER)?|ALTER)\s+PROC(?:EDURE)?\s+"
-    rf"{_IDENTIFIER}(?:\s*\.\s*{_IDENTIFIER})*",
+    rf"(?P<name>{_IDENTIFIER}(?:\s*\.\s*{_IDENTIFIER})*)",
     re.IGNORECASE,
 )
 _PARAMETER = re.compile(
@@ -33,15 +33,22 @@ _INTEGER_MAXIMUMS = {
 
 @dataclass(frozen=True, slots=True)
 class ProcedureParameter:
-    """A procedure input, retaining its declared name, type, and dimensions."""
+    """A procedure parameter, retaining its declared type and output direction."""
 
     name: str
     sql_type: str
     arguments: tuple[str, ...]
+    is_output: bool = False
 
 
-def _read_parameters(path: Path) -> list[ProcedureParameter]:
-    """Read one T-SQL procedure signature without scanning its body for fields."""
+def read_procedure_names(source: str) -> list[str]:
+    """Read declared procedure names while excluding comments and string values."""
+    masked = _SQL_NOISE.sub(lambda match: " " * len(match[0]), source)
+    return [match["name"] for match in _PROCEDURE.finditer(masked)]
+
+
+def read_procedure_signature(path: Path) -> tuple[str, list[ProcedureParameter]]:
+    """Read one T-SQL procedure's name and parameters for CSV workflows."""
     if path.suffix.lower() != ".sql":
         raise ValueError(f"CSV generation requires a SQL Server procedure file: {path}")
     source = path.read_text(encoding="utf-8-sig")
@@ -61,8 +68,9 @@ def _read_parameters(path: Path) -> list[ProcedureParameter]:
         if match is None:
             raise ValueError(f"Unsupported procedure parameter declaration in {path.name}.")
         tail = match["tail"].strip()
-        if re.search(r"\b(?:OUT|OUTPUT)\b", tail, re.IGNORECASE):
-            continue
+        is_output = bool(re.search(r"\b(?:OUT|OUTPUT)\b", tail, re.IGNORECASE))
+        if is_output:
+            tail = re.sub(r"\b(?:OUT|OUTPUT)\b", "", tail, flags=re.IGNORECASE).strip()
         if (tail and not tail.startswith("=")) or "@" in tail:
             raise ValueError(f"Unsupported parameter syntax for @{match['name']}.")
         name = match["name"]
@@ -78,10 +86,11 @@ def _read_parameters(path: Path) -> list[ProcedureParameter]:
             name=name,
             sql_type=match["type"].strip("[]").lower(),
             arguments=arguments,
+            is_output=is_output,
         ))
-    if not parameters:
+    if not any(not parameter.is_output for parameter in parameters):
         raise ValueError(f"No input parameters found in {path.name}.")
-    return parameters
+    return declarations[0]["name"], parameters
 
 
 def _string_generator(
@@ -234,7 +243,8 @@ def generate_csv_files(procedure_files: list[Path], record_count: int) -> list[P
     fake = Faker("en_US")
     plans = []
     for procedure in dict.fromkeys(procedure_files):
-        parameters = _read_parameters(procedure)
+        _, parameters = read_procedure_signature(procedure)
+        parameters = [parameter for parameter in parameters if not parameter.is_output]
         generators = [_value_generator(parameter, fake, record_count) for parameter in parameters]
         plans.append((procedure, parameters, generators))
     outputs = []

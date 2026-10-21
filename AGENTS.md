@@ -121,6 +121,39 @@ from `pyproject.toml`. Keep path handling and packaging portable across platform
   behavior must be intentional and documented.
 - Keep MCP stdout reserved for protocol traffic; send diagnostic logging to stderr.
   MCP host authentication is separate from direct provider API authentication.
+- `populate` is the MCP tool that executes population SQL against the target
+  Docker container. It accepts `project_root`, `csv_files`, and `copied_files`
+  from the earlier tools, plus a required `database` name from verified schema
+  information or user input. It creates `.sandboxer/populate`, lists Docker
+  contexts with `docker context ls`, and elicits a context. It then uses explicit
+  `docker --context <name> ps --no-trunc` to list running containers and elicits
+  a container name. Choices show names, with images in the prompt for context.
+  After selection, Python pairs `copied_files` and
+  `csv_files` in the order returned by `generate` (one CSV per procedure), and
+  writes `.sandboxer/populate/<procedure stem>_Populate_<CSV row count>.sql`.
+  Each file includes the copied definition and a new parameterless population
+  procedure with one `EXEC` per record. Unicode literals are escaped; SQL Server
+  converts values to the source procedure's parameter types. CSV headers must
+  match input parameters, in any order; output parameters receive NULL without
+  capturing their values. Repeating a count replaces its script;
+  other counts are preserved. Complete scripts are staged before replacement
+  so CSV errors leave existing scripts intact. It then calls
+  `execute_population_sql()` for each generated file, applying its procedure
+  definitions and executing its population procedure in the selected context,
+  container, and database. It returns `populate_path`, `docker_context`,
+  `container_name`, `database`, `sql_files`, and `status="executed"` only after
+  all executions succeed. Failures raise a tool error; generated files remain.
+  Discovery failures, empty lists, and declined selections abort without a
+  default target. Never switch Docker's active context for this workflow.
+- `execute_population_sql()` in `src/core/population.py` is the execution helper
+  called by the MCP `populate` tool. Supply the SQL file, Docker context,
+  container name, and database; the procedure name is optional and defaults to
+  the last procedure declared in the generated file, excluding comments and
+  string literals. It streams the script and a final `EXEC` through
+  `docker exec -i` and sqlcmd in a Linux SQL Server container. Authentication uses
+  the container's SQLCMDPASSWORD or MSSQL_SA_PASSWORD without passing a password
+  in arguments.
+  It captures output and raises on Docker/SQL errors or timeout.
 
 ## Implementation conventions
 
