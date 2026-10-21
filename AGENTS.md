@@ -18,7 +18,11 @@ Python 3.12 is selected by `.python-version`; `pyproject.toml` requires Python
   `src/models/` defines adapter contracts and provider implementations. The OpenAI
   and Anthropic adapters currently raise errors because they are placeholders.
 - `examples/blog/` contains a SQL Server example with table definitions, stored
-  procedures, and Docker setup. See `examples/README.md` for its commands.
+  procedures, and Docker setup. `entrypoint.sh` waits for SQL Server, then runs
+  `init.sql` with sqlcmd to create the Blog database and missing
+  tables in foreign key order on startup. Initialization failures stop the
+  container; existing tables and data are preserved. See `examples/README.md`
+  for its commands.
 
 ## Development commands
 
