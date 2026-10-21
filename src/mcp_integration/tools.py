@@ -10,14 +10,19 @@ from core import (
     build_context,
     build_schema_analysis_prompt,
     create_file_inventory,
+    create_population_sql,
+    execute_population_sql,
     generate_csv_files,
 )
 
 from .elicitation import (
+    DockerChoiceInput,
     PreparedGeneration,
     ProjectRootInput,
     RecordCountInput,
     prepare_generation,
+    request_docker_container,
+    request_docker_context,
     resolve_record_count,
     resolve_project_root,
 )
@@ -108,4 +113,55 @@ def generate(
         "copied_files": list(prepared.copied_files),
         "record_count": count.record_count,
         "csv_files": [str(path) for path in csv_files],
+    }
+
+
+def populate(
+    project_root: str,
+    csv_files: list[str],
+    copied_files: list[str],
+    database: str,
+    docker_context: Annotated[DockerChoiceInput, Resolve(request_docker_context)],
+    container: Annotated[DockerChoiceInput, Resolve(request_docker_container)],
+) -> dict[str, object]:
+    """Generate population SQL and execute it against the selected Docker container.
+
+    Supply project_root from analyze and csv_files and copied_files from generate.
+    Supply the target database name explicitly, using verified schema information
+    or user input. This tool writes records to that database.
+    Keep both lists in matching order, with one CSV per copied Create procedure.
+    Python creates the output folder, lists Docker contexts, and asks the user
+    which environment contains the container. Then it lists running containers
+    only in that context and asks the user to select a container name.
+    After selection, Python writes one SQL file per pair in .sandboxer/populate.
+    The file includes the copied definition and a new parameterless procedure
+    calling it once per CSV record. Names use the copied filename stem and actual
+    CSV row count: User_Create_Populate_50.sql. A matching count replaces that
+    script; a different count creates another file. CSV text is escaped and
+    converted by SQL Server to the source procedure's declared parameter types.
+    Then execute each file with docker exec and sqlcmd in the selected context
+    and container, applying the definitions and invoking the generated population
+    procedure. Authentication uses the container's SQLCMDPASSWORD or
+    MSSQL_SA_PASSWORD for the sa login. Docker's active context is unchanged.
+    Return populate_path, docker_context, container_name, database, sql_files, and
+    status="executed" only after all scripts execute successfully. Execution
+    failures raise a tool error; generated SQL files remain available.
+    """
+    root = ProjectRootInput(project_root=project_root).project_root
+    populate_path = Path(root) / ".sandboxer" / "populate"
+    try:
+        if not database.strip():
+            raise ValueError("The target database name is required.")
+        sql_files = create_population_sql(Path(root), copied_files, csv_files)
+        for sql_file in sql_files:
+            execute_population_sql(sql_file, docker_context.choice, container.choice, database)
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
+    return {
+        "populate_path": str(populate_path),
+        "docker_context": docker_context.choice,
+        "container_name": container.choice,
+        "database": database,
+        "sql_files": [str(path) for path in sql_files],
+        "status": "executed",
     }
