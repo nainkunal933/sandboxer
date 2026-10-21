@@ -98,9 +98,20 @@ from `pyproject.toml`. Keep path handling and packaging portable across platform
   without a default count; staged files remain. Preparation is a resolver
   dependency of count elicitation and reuses identical files on MCP retries.
   The tool returns `project_root`, `target`, `objective`, `values`, `copied_files`
-  (destination paths, including reused copies), and integer `record_count`.
+  (destination paths, including reused copies), integer `record_count`, and
+  `csv_files`. After count acceptance, Python uses Faker to stream exactly that
+  many data rows per copied SQL Server Create procedure into CSV files beside
+  the staged sources. Headers are input parameter names without `@`, preserving
+  declaration order; output parameters are excluded. Supported types include
+  character strings with length bounds, integers, bit, decimal/numeric, money,
+  float/real, date/time types, and uniqueidentifier. Unsupported signatures or
+  types fail explicitly. Integer ID fields use sequential values starting at 1;
+  password fields contain synthetic SHA-256 placeholder hashes, not plaintext.
+  Table relationships and application-specific hash formats are not inferred.
+  Each CSV is named `<procedure stem>.csv`, with numeric suffixes on repeat runs
+  to preserve existing files. Incomplete outputs are removed on failure.
   The count is elicited, not a caller-supplied tool argument. The tool does not
-  parse schema.md, scan for related files, return a prompt, or generate data.
+  parse schema.md, scan for related files, return a prompt, or execute SQL.
   No arbitrary option-count limit is imposed.
   Changes to tool arguments, return fields, CSV format, or content-scanning
   behavior must be intentional and documented.

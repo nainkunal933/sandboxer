@@ -4,11 +4,13 @@ from pathlib import Path
 from typing import Annotated
 
 from mcp.server.mcpserver import Resolve
+from mcp.server.mcpserver.exceptions import ToolError
 
 from core import (
     build_context,
     build_schema_analysis_prompt,
     create_file_inventory,
+    generate_csv_files,
 )
 
 from .elicitation import (
@@ -84,9 +86,20 @@ def generate(
     Context values do not bypass this question. Decline/cancel aborts completion
     without a default count; already copied files remain.
     Return project_root, target, objective, values, copied_files (destination
-    paths, including reused copies), and integer record_count. No prompt or data
-    is generated.
+    paths, including reused copies), integer record_count, and csv_files.
+    After count acceptance, Python uses Faker to generate that many data rows per
+    copied SQL Server Create procedure. CSV columns follow input parameter names
+    and datatypes, excluding output parameters. Files are written beside the
+    copied procedures as <procedure filename stem>.csv; existing CSVs are preserved
+    by adding a numeric suffix. Unsupported types fail rather than guessing.
+    No database commands are executed and no prompt is returned.
     """
+    try:
+        csv_files = generate_csv_files(
+            [Path(path) for path in prepared.copied_files], count.record_count
+        )
+    except (OSError, ValueError) as error:
+        raise ToolError(str(error)) from error
     return {
         "project_root": prepared.project_root,
         "target": prepared.target,
@@ -94,4 +107,5 @@ def generate(
         "values": dict(prepared.context.values),
         "copied_files": list(prepared.copied_files),
         "record_count": count.record_count,
+        "csv_files": [str(path) for path in csv_files],
     }
