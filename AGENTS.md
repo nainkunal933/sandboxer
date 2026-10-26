@@ -23,6 +23,10 @@ Python 3.12 is selected by `.python-version`; `pyproject.toml` requires Python
   tables in foreign key order on startup. Initialization failures stop the
   container; existing tables and data are preserved. See `examples/README.md`
   for its commands.
+- `examples/shopping_cart/` contains a MongoDB example with JSON schema files.
+  Its entrypoint waits for MongoDB, then runs `data/create_collections.py` to create
+  collections or update validators. Setup failures stop the container; existing
+  data is preserved. Python and PyMongo are bundled in the image.
 
 ## Development commands
 
