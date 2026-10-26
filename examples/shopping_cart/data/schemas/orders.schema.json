@@ -1,0 +1,68 @@
+{
+    "bsonType": "object",
+    "required": [
+        "customer_id",
+        "items",
+        "total",
+        "status",
+        "created_at"
+    ],
+    "properties": {
+        "customer_id": {
+            "bsonType": "string",
+            "minLength": 1
+        },
+        "items": {
+            "bsonType": "array",
+            "minItems": 1,
+            "items": {
+                "bsonType": "object",
+                "required": [
+                    "product_id",
+                    "quantity",
+                    "unit_price"
+                ],
+                "properties": {
+                    "product_id": {
+                        "bsonType": "objectId"
+                    },
+                    "quantity": {
+                        "bsonType": "int",
+                        "minimum": 1
+                    },
+                    "unit_price": {
+                        "bsonType": [
+                            "decimal",
+                            "double",
+                            "int",
+                            "long"
+                        ],
+                        "minimum": 0
+                    }
+                }
+            }
+        },
+        "total": {
+            "bsonType": [
+                "decimal",
+                "double",
+                "int",
+                "long"
+            ],
+            "minimum": 0
+        },
+        "status": {
+            "bsonType": "string",
+            "enum": [
+                "pending",
+                "paid",
+                "shipped",
+                "delivered",
+                "cancelled"
+            ]
+        },
+        "created_at": {
+            "bsonType": "date"
+        }
+    }
+}

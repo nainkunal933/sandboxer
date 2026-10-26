@@ -1,0 +1,36 @@
+{
+    "bsonType": "object",
+    "required": [
+        "customer_id",
+        "items",
+        "updated_at"
+    ],
+    "properties": {
+        "customer_id": {
+            "bsonType": "string",
+            "minLength": 1
+        },
+        "items": {
+            "bsonType": "array",
+            "items": {
+                "bsonType": "object",
+                "required": [
+                    "product_id",
+                    "quantity"
+                ],
+                "properties": {
+                    "product_id": {
+                        "bsonType": "objectId"
+                    },
+                    "quantity": {
+                        "bsonType": "int",
+                        "minimum": 1
+                    }
+                }
+            }
+        },
+        "updated_at": {
+            "bsonType": "date"
+        }
+    }
+}
