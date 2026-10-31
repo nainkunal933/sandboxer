@@ -2,11 +2,13 @@ FROM mongodb/mongodb-community-server:9.0-ubi9-slim
 
 USER root
 ENV UV_PYTHON_INSTALL_DIR=/opt/python
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+
+COPY pyproject.toml uv.lock /opt/shopping-cart/
 
 RUN --mount=from=ghcr.io/astral-sh/uv:0.12.23,source=/uv,target=/uv \
     /uv python install 3.12 \
-    && /uv venv --python 3.12 /opt/venv \
-    && /uv pip install --no-cache --python /opt/venv/bin/python "pymongo>=4.15,<5"
+    && /uv sync --locked --no-dev --no-cache --python 3.12 --project /opt/shopping-cart
 
 COPY data/ /schema/
 COPY entrypoint.sh /schema/entrypoint.sh

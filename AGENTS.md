@@ -26,7 +26,12 @@ Python 3.12 is selected by `.python-version`; `pyproject.toml` requires Python
 - `examples/shopping_cart/` contains a MongoDB example with JSON schema files.
   Its entrypoint waits for MongoDB, then runs `data/create_collections.py` to create
   collections or update validators. Setup failures stop the container; existing
-  data is preserved. Python and PyMongo are bundled in the image.
+  data is preserved. It is an independent, non-packaged uv project with its own
+  `pyproject.toml`, `uv.lock`, and local `.venv`. From `examples/shopping_cart`, run
+  `uv sync --locked` to install dependencies, then
+  `uv run --locked data/create_collections.py` to initialize a running MongoDB
+  instance. Docker installs the same locked dependencies; Python and PyMongo are
+  bundled in the image.
 
 ## Development commands
 
