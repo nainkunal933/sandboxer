@@ -1,10 +1,6 @@
-# /// script
-# requires-python = ">=3.12"
-# dependencies = ["pymongo>=4.15,<5"]
-# ///
 """Create shopping cart collections with JSON Schema validators from external files.
 
-Run with: uv run examples/shopping_cart/data/create_collections.py
+From examples/shopping_cart, run: uv run data/create_collections.py
 Set MONGODB_URI to override the default mongodb://127.0.0.1:27017 connection.
 """
 
