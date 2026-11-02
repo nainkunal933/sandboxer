@@ -11,7 +11,7 @@ from .generation_strategies.sqlserver_generation import (
     read_procedure_signature,
     value_generator,
 )
-from .schemas import SandboxContext
+from .schemas import DataModel, SandboxContext
 
 
 def build_generation_prompt(context: SandboxContext) -> str:
@@ -41,9 +41,21 @@ def build_schema_analysis_prompt(
         .joinpath("prompts", "schema_analysis.md")
         .read_text(encoding="utf-8")
     )
+    descriptions = {
+        DataModel.RELATIONAL: "Tables with rows, columns, and declared keys or relationships.",
+        DataModel.DOCUMENT: "Documents with fields, nested objects, and arrays.",
+        DataModel.KEY_VALUE: "Keys mapped to values treated as opaque by the data model.",
+        DataModel.GRAPH: "Entities and relationships represented as nodes and edges.",
+        DataModel.WIDE_COLUMN: "Rows with variable columns organized into column families.",
+        DataModel.VECTOR: "Embeddings organized for vector similarity search.",
+        DataModel.TIME_SERIES: "Time-indexed observations organized for time-range queries.",
+    }
     return template.format(
         project_root=project_root,
         inventory_csv_path=inventory_csv_path,
+        data_models="\n".join(
+            f"- `{model.value}`: {descriptions[model]}" for model in DataModel
+        ),
     )
 
 

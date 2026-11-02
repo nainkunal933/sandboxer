@@ -16,7 +16,7 @@ H1 and exactly these H2 headings, in order. Use H3 or deeper for subsections.
 ```markdown
 # <Project> database schema
 
-## Scope and engine
+## Database metadata
 
 ## Structure
 
@@ -29,10 +29,31 @@ If .sandboxer/schema.md exists, preserve its title and source-verified schema an
 creation information, nesting schema descriptions under Structure. Replace old
 read/update/delete details with compact entries under Procedure references;
 remove their parameter tables and detailed behavior, including shared behavior
-that only concerns those operations. Source files remain authoritative.
+that only concerns those operations. Replace any old Scope and engine section
+with Database metadata and remove its scope narrative. Source files remain
+authoritative.
 
-Scope and engine: identify engines, databases/namespaces, analyzed sources, setup,
-and migration order where determinable. State that no live database was inspected.
+Database metadata: include only these three entries:
+
+- Data model: an exact enum value from the list below, formatted as inline code.
+  Use an array of distinct enum values if multiple models are demonstrated.
+  If classification cannot be established, state that it is undetermined rather
+  than guessing or inventing an enum value.
+- Engine: the source-identified database engine, or engines when multiple are
+  demonstrated. State uncertainty when the engine cannot be determined.
+- Databases: a JSON array of all explicitly identified database names,
+  deduplicated in discovery order. Use [] when no names can be determined.
+  Do not infer database names from directories or select a target database.
+  Do not limit the number of databases or perform live database discovery.
+
+Allowed data models and classification guidance:
+
+{data_models}
+
+Classify from the inspected schema structures and usage, not solely from the
+database product or its supported features. Do not include scope narrative,
+inventory counts, dependency versions, or setup/migration details in Database
+metadata. Analysis describes the source schema without selecting a target.
 
 Structure: organize by table or collection and document:
 
@@ -42,6 +63,9 @@ Structure: organize by table or collection and document:
   constraints from inferred relationships and note ambiguities or conflicts.
 - MongoDB nesting, arrays, embedding, and references without implying foreign-key
   enforcement.
+
+Preserve source-qualified entity names where needed to distinguish identically
+named entities across databases.
 
 Population: organize by table or collection. Document only create/insert
 procedures or methods individually. Include:

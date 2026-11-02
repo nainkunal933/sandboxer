@@ -82,15 +82,23 @@ from `pyproject.toml`. Keep path handling and packaging portable across platform
   creates `.sandboxer/`, and returns the inventory path, count, context, and schema
   analysis prompt for the host agent to write `.sandboxer/schema.md`. The bundled
   `.schemaignore` excludes `.sandboxer/` artifacts from the inventory.
-  The document has four H2 sections: Scope and engine, Structure, Population, and
-  Procedure references. Population details only create/insert procedures or
+  The document has four H2 sections: Database metadata, Structure, Population, and
+  Procedure references. Database metadata contains Data model, Engine, and a
+  Databases array of all source-declared names, deduplicated in discovery order
+  (empty when none are known), without selecting a target. Data model values come
+  from the Python DataModel enum rendered into the prompt: relational, document,
+  key_value, graph, wide_column, vector, and time_series. Classification uses
+  inspected structures and usage, allowing multiple models when demonstrated
+  and stating uncertainty rather than guessing. Re-analysis replaces the old
+  Scope and engine section and removes its scope narrative.
+  Population details only create/insert procedures or
   equivalent application methods. Other operations are listed in a compact
   reference table with target, qualified name, operation, and source path; omit
   their parameter tables and detailed behavior. Re-analysis replaces old
   read/update/delete details with references, including shared behavior specific
   to those operations. Inspect creation bodies fully and other operations only
   enough to verify their classification and references, never by filename alone.
-  Before calling `generate`, the host agent reads Scope and engine and Structure
+  Before calling `generate`, the host agent reads Database metadata and Structure
   in `.sandboxer/schema.md` to prepare actual table/collection `target_options`.
   It reads Population to identify procedure source paths and supplies the root
   from `analyze` plus `target_procedures`, a mapping from exact target names to
