@@ -1,7 +1,6 @@
 """Generate synthetic CSV data from SQL Server procedure input parameters."""
 
 from collections.abc import Callable
-import csv
 from dataclasses import dataclass
 from datetime import timezone
 from decimal import Decimal, localcontext
@@ -130,7 +129,7 @@ def _string_generator(
     return value
 
 
-def _value_generator(
+def value_generator(
     parameter: ProcedureParameter, fake: Faker, record_count: int,
 ) -> Callable[[int], str]:
     """Compile a supported SQL type into a per-row Faker-backed generator."""
@@ -215,7 +214,7 @@ def _value_generator(
     raise ValueError(f"Unsupported SQL datatype {sql_type!r} for @{parameter.name}.")
 
 
-def _open_csv(procedure: Path) -> tuple[Path, TextIO]:
+def open_csv(procedure: Path) -> tuple[Path, TextIO]:
     """Create a CSV alongside the source, choosing a free name on repeated runs."""
     index = 1
     while True:
@@ -225,40 +224,3 @@ def _open_csv(procedure: Path) -> tuple[Path, TextIO]:
             return destination, destination.open("x", encoding="utf-8", newline="")
         except FileExistsError:
             index += 1
-
-
-def generate_csv_files(procedure_files: list[Path], record_count: int) -> list[Path]:
-    """Stream exactly record_count rows per procedure, removing output on failure.
-
-    Headers are input parameter names without @, in declaration order. Each
-    procedure produces a separate CSV beside its staged SQL source. Values honor
-    supported parameter types and dimensions; table constraints and application
-    rules, including foreign-key existence and password-hash formats, are not
-    inferred. Password fields contain synthetic SHA-256 placeholder hashes.
-    """
-    if type(record_count) is not int or record_count < 1:
-        raise ValueError("Record count must be a positive whole number.")
-    if not procedure_files:
-        raise ValueError("No creation procedure is available to generate CSV data.")
-    fake = Faker("en_US")
-    plans = []
-    for procedure in dict.fromkeys(procedure_files):
-        _, parameters = read_procedure_signature(procedure)
-        parameters = [parameter for parameter in parameters if not parameter.is_output]
-        generators = [_value_generator(parameter, fake, record_count) for parameter in parameters]
-        plans.append((procedure, parameters, generators))
-    outputs = []
-    try:
-        for procedure, parameters, generators in plans:
-            destination, stream = _open_csv(procedure)
-            outputs.append(destination)
-            with stream:
-                writer = csv.writer(stream)
-                writer.writerow([parameter.name for parameter in parameters])
-                for row_number in range(1, record_count + 1):
-                    writer.writerow([generate(row_number) for generate in generators])
-        return outputs
-    except Exception:
-        for output in outputs:
-            output.unlink(missing_ok=True)
-        raise

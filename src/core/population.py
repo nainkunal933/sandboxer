@@ -6,7 +6,10 @@ import re
 import subprocess
 from uuid import uuid4
 
-from .csv_generation import read_procedure_names, read_procedure_signature
+from .generation_strategies.sqlserver_generation import (
+    read_procedure_names,
+    read_procedure_signature,
+)
 
 
 def _staged_input(root: Path, path: str, suffix: str) -> Path:
