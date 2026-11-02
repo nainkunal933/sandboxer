@@ -39,7 +39,8 @@ def analyze(
     The host agent should execute the returned prompt to inspect candidate files
     and create .sandboxer/schema.md relative to the project root, detailing
     create/insert interfaces in Population and listing other procedures briefly
-    under Procedure references.
+    under Procedure references. Database metadata records data models, engines,
+    and source-declared database names without selecting a target database.
     The bundled .schemaignore excludes matching files and prunes directories.
     Eligibility marks schema candidates by extension; file contents are not scanned.
     """
@@ -71,8 +72,8 @@ def generate(
 ) -> dict[str, object]:
     """Select a target, stage creation procedures, and ask for a record count.
 
-    Before calling, use the project_root returned by analyze. Read Scope and
-    engine and Structure in .sandboxer/schema.md to prepare target_options from
+    Before calling, use the project_root returned by analyze. Read Database
+    metadata and Structure in .sandboxer/schema.md to prepare target_options from
     actual table or collection names, preserving qualified names and excluding
     descriptive headings. Read Population to identify each target's existing
     create/insert procedure source files. Supply target_procedures as a mapping

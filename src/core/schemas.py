@@ -1,7 +1,20 @@
 """Domain models shared by the CLI and MCP server."""
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Mapping
+
+
+class DataModel(StrEnum):
+    """Data models used to classify source-verified database schemas."""
+
+    RELATIONAL = "relational"
+    DOCUMENT = "document"
+    KEY_VALUE = "key_value"
+    GRAPH = "graph"
+    WIDE_COLUMN = "wide_column"
+    VECTOR = "vector"
+    TIME_SERIES = "time_series"
 
 
 @dataclass(frozen=True, slots=True)
