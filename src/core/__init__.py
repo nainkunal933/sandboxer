@@ -1,8 +1,11 @@
 """Shared Sandboxer business logic."""
 
 from .context import build_context, normalize_target_options
-from .csv_generation import generate_csv_files
-from .generation import build_generation_prompt, build_schema_analysis_prompt
+from .generation import (
+    build_generation_prompt,
+    build_schema_analysis_prompt,
+    generate_csv_files,
+)
 from .inventory import create_file_inventory
 from .population import create_population_sql, execute_population_sql
 from .procedures import copy_procedure_files
