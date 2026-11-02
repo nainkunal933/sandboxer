@@ -5,6 +5,7 @@ from typing import Annotated
 
 from mcp.server.mcpserver import Resolve
 from mcp.server.mcpserver.exceptions import ToolError
+from pydantic import StringConstraints
 
 from core import (
     build_context,
@@ -14,6 +15,7 @@ from core import (
     execute_population_sql,
     generate_csv_files,
 )
+from core.schemas import DataModel
 
 from .elicitation import (
     DockerChoiceInput,
@@ -64,6 +66,8 @@ def analyze(
 def generate(
     objective: str,
     project_root: str,
+    data_model: DataModel,
+    engine: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)],
     target_options: list[str],
     target_procedures: dict[str, list[str]],
     prepared: Annotated[PreparedGeneration, Resolve(prepare_generation)],
@@ -75,7 +79,15 @@ def generate(
     Before calling, use the project_root returned by analyze. Read Database
     metadata and Structure in .sandboxer/schema.md to prepare target_options from
     actual table or collection names, preserving qualified names and excluding
-    descriptive headings. Read Population to identify each target's existing
+    descriptive headings. Supply the source-verified data_model enum value and
+    engine from Database metadata for those targets. Both arguments are required;
+    engine is trimmed and must be non-empty. If the project has multiple models
+    or engines, group targets into separate calls with one model/engine pair per
+    call. If classification is undetermined, resolve it from source or user input
+    before calling rather than guessing. These arguments carry classification
+    metadata; generation still uses SQL Server procedures and does not dispatch
+    strategies based on these values yet.
+    Read Population to identify each target's existing
     create/insert procedure source files. Supply target_procedures as a mapping
     from those exact target names to root-relative source paths; use an empty list
     when no creation procedures exist. Exclude read/update/delete procedures,
