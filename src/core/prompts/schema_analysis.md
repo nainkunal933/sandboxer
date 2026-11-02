@@ -55,6 +55,13 @@ database product or its supported features. Do not include scope narrative,
 inventory counts, dependency versions, or setup/migration details in Database
 metadata. Analysis describes the source schema without selecting a target.
 
+For the later generate call, the host must supply the source-verified data_model
+enum value and engine from Database metadata as required arguments. Group target
+options into separate calls when they belong to different model/engine pairs;
+each call accepts one model and one engine. If classification is undetermined,
+resolve it from source or user input before calling rather than guessing.
+These arguments carry metadata; they do not enable new generation strategies.
+
 Structure: organize by table or collection and document:
 
 - Purpose, source paths, and fields with native types, nullability/optionality,

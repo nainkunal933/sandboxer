@@ -100,6 +100,12 @@ from `pyproject.toml`. Keep path handling and packaging portable across platform
   enough to verify their classification and references, never by filename alone.
   Before calling `generate`, the host agent reads Database metadata and Structure
   in `.sandboxer/schema.md` to prepare actual table/collection `target_options`.
+  It supplies required `data_model` (a DataModel enum value) and `engine`
+  (a trimmed, non-empty string) for those targets. Group targets into separate
+  calls for different model/engine pairs; resolve undetermined classifications
+  from source or user input before calling rather than guessing. MCP validates
+  these arguments before elicitation or staging. They carry metadata only;
+  strategy dispatch and generation behavior remain unchanged.
   It reads Population to identify procedure source paths and supplies the root
   from `analyze` plus `target_procedures`, a mapping from exact target names to
   root-relative create/insert procedure file paths (empty lists for targets without
